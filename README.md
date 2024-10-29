@@ -24,8 +24,8 @@ sudo su
 ### ⚙ Step #2: Download the script and make it executable.
 
 ```
-wget https://raw.githubusercontent.com/Kastervo/OpenVAS-Installation/master/openvas_install.sh && \
-	chmod +x openvas_install.sh
+wget https://raw.githubusercontent.com/FeralDucka/OpenVAS-Installation/master/openvas_install.sh
+chmod +x openvas_install.sh
 ```
 
 ### ⚙ Step #3: Execute the script.
