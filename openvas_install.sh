@@ -460,7 +460,7 @@ Group=gvm
 RuntimeDirectory=gsad
 RuntimeDirectoryMode=2775
 PIDFile=/run/gsad/gsad.pid
-ExecStart=/usr/local/sbin/gsad --foreground --listen=0.0.0.0 --port=9392 --http-only
+ExecStart=/usr/local/sbin/gsad --foreground --listen=0.0.0.0 --port=9392 --http-only --timeout=1440
 Restart=always
 TimeoutStopSec=10
 
@@ -488,5 +488,11 @@ systemctl start notus-scanner
 systemctl start ospd-openvas
 systemctl start gvmd
 systemctl start gsad
+
+# Remove the leftover folders
+rm -rf ~/source \
+rm -rf ~/build \
+rm -rf ~/install \
+rm -rf ~/1
 
 echo "OpenVAS installation has been completed."
