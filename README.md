@@ -25,6 +25,8 @@ sudo su
 
 ```
 wget https://raw.githubusercontent.com/FeralDucka/OpenVAS-Installation/master/openvas_install.sh
+```
+```
 chmod +x openvas_install.sh
 ```
 
@@ -47,16 +49,8 @@ sudo systemctl status ospd-openvas
 sudo systemctl status gvmd
 sudo systemctl status gsad
 ```
-### ⚙ (Optional) Step #6: Cleanup the installation files.
 
-You may want to clean up the following directories that where left behind after finishing the installation.
-```
-rm -rf ~/source \
-rm -rf ~/build \
-rm -rf ~/install \
-rm -rf ~/1
-```
-### ⚙ Step #7: Login.
+### ⚙ Step #6: Login.
 
 Open your browser and login to the Greenbone Security Assistant.
 ```
