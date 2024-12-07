@@ -1,4 +1,4 @@
-# OpenVAS installation from sources for Debian 12 systems.
+# OpenVAS installation from sources for Ubuntu 24 systems.
 
 A simple bash script that installs OpenVAS from sources on Debian 12.
 
