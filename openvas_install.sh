@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# OpenVAS installation from sources for Debian 12 systems.
+# OpenVAS installation from sources for Ubuntu 24 systems.
 # Documentation: https://greenbone.github.io/docs/latest/
 
 # Check if the script is running as root.
