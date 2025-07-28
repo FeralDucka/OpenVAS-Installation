@@ -421,18 +421,3 @@ systemctl start ospd-openvas
 systemctl start gvmd
 systemctl start gsad
 
-
-
-
-
-# Remove the leftover folders
-rm -rf ~/source \
-rm -rf ~/build \
-rm -rf ~/install \
-rm -rf ~/1
-
-
-
-
-
-echo "OpenVAS installation has been completed."
