@@ -32,7 +32,7 @@ apt install -y --no-install-recommends redis-server mosquitto postgresql
 
 
 # Set environment variables
-REPO_URL="https://raw.githubusercontent.com/FeralDucka/OpenVAS-Installation/refs/heads/master/files-to-copy/"
+REPO_URL="https://raw.githubusercontent.com/FeralDucka/OpenVAS-Installation/refs/heads/master/files-to-copy"
 
 INSTALL_PREFIX=/usr/local
 PATH=$PATH:$INSTALL_PREFIX/sbin
