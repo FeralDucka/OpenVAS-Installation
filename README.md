@@ -9,17 +9,9 @@
 ## Download the script and make it executable.
 ```
 mkdir openvas
-```
-```
 cd openvas
-```
-```
 wget https://raw.githubusercontent.com/FeralDucka/OpenVAS-Installation/master/openvas_install.sh
-```
-```
 chmod +x openvas_install.sh
-```
-```
 sudo ./openvas_install.sh
 ```
 
