@@ -17,20 +17,6 @@ fi
 
 
 
-# Install Required Packages
-apt install -y --no-install-recommends build-essential curl cmake gnupg make pkg-config
-apt install -y --no-install-recommends libcjson-dev libcurl4-openssl-dev
-apt install -y --no-install-recommends libglib2.0-dev libgpgme-dev libgnutls28-dev uuid-dev libssh-dev libhiredis-dev libxml2-dev libpcap-dev libnet1-dev libpaho-mqtt-dev
-apt install -y --no-install-recommends libldap2-dev libradcli-dev libpq-dev postgresql-server-dev-17 libical-dev xsltproc rsync libbsd-dev
-apt install -y --no-install-recommends texlive-latex-extra texlive-fonts-recommended xmlstarlet zip rpm fakeroot dpkg nsis gpgsm wget sshpass openssh-client socat snmp python3 smbclient python3-lxml gnutls-bin xml-twig-tools
-apt install -y --no-install-recommends libmicrohttpd-dev gcc-mingw-w64 libpopt-dev libunistring-dev heimdal-multidev perl-base bison libgcrypt20-dev libksba-dev nmap libjson-glib-dev libsnmp-dev
-apt install -y --no-install-recommends python3 python3-pip python3-setuptools python3-packaging python3-wrapt python3-cffi python3-psutil python3-lxml python3-defusedxml python3-paramiko python3-redis python3-gnupg python3-paho-mqtt python3-venv python3-impacket
-apt install -y --no-install-recommends redis-server mosquitto postgresql
-
-
-
-
-
 # Set environment variables
 REPO_URL="https://raw.githubusercontent.com/FeralDucka/OpenVAS-Installation/refs/heads/master/files-to-copy"
 
@@ -49,6 +35,8 @@ OPENVAS_SMB_VERSION=22.5.8
 OPENVAS_SCANNER_VERSION=23.22.0
 OSPD_OPENVAS_VERSION=22.9.0
 NOTUS_VERSION=22.7.2
+FEED_SYNC_VERSION=25.1.0
+GVM_TOOLS_VERSION=25.3.1
 
 GNUPGHOME=/tmp/openvas-gnupg
 OPENVAS_GNUPG_HOME=/etc/openvas/gnupg
@@ -57,8 +45,29 @@ OPENVAS_GNUPG_HOME=/etc/openvas/gnupg
 
 
 
+# Install Required Packages
+apt install -y --no-install-recommends build-essential curl cmake gnupg make pkg-config
+apt install -y --no-install-recommends libcjson-dev libcurl4-openssl-dev
+apt install -y --no-install-recommends libglib2.0-dev libgpgme-dev libgnutls28-dev uuid-dev libssh-dev libhiredis-dev libxml2-dev libpcap-dev libnet1-dev libpaho-mqtt-dev
+apt install -y --no-install-recommends libldap2-dev libradcli-dev libpq-dev postgresql-server-dev-17 libical-dev xsltproc rsync libbsd-dev
+apt install -y --no-install-recommends texlive-latex-extra texlive-fonts-recommended xmlstarlet zip rpm fakeroot dpkg nsis gpgsm wget sshpass openssh-client socat snmp python3 smbclient python3-lxml gnutls-bin xml-twig-tools
+apt install -y --no-install-recommends libmicrohttpd-dev gcc-mingw-w64 libpopt-dev libunistring-dev heimdal-multidev perl-base bison libgcrypt20-dev libksba-dev nmap libjson-glib-dev libsnmp-dev
+apt install -y --no-install-recommends python3 python3-pip python3-venv
+apt install -y --no-install-recommends redis-server mosquitto postgresql
+
+
+
+
+
+# Getting installed Python3 version
+PYTHON_VERSION=$(python3 --version | sed -E 's/.* ([0-9]+\.[0-9]+)\..*/\1/')
+
+
+
+
+
 # Create user
-getent passwd gvm > /dev/null 2&>1
+getent passwd gvm > /dev/null 2>&1
 if [ $? -eq 0 ]; then
     echo "GVM User already exists."
 else
@@ -125,7 +134,10 @@ cmake $SOURCE_DIR/gvmd-$GVMD_VERSION \
 make -j$(nproc)
 mkdir -p $INSTALL_DIR/gvmd
 make DESTDIR=$INSTALL_DIR/gvmd install
-cp -rv $INSTALL_DIR/gvmd/* /
+cp -rv $INSTALL_DIR/gvmd/etc/* /etc/
+cp -rv $INSTALL_DIR/gvmd/lib/* /usr/local/lib/
+cp -rv $INSTALL_DIR/gvmd/usr/* /usr/
+cp -rv $INSTALL_DIR/gvmd/var/* /var/
 
 
 
@@ -221,9 +233,26 @@ cp -rv $INSTALL_DIR/openvas-scanner/* /
 curl -f -L https://github.com/greenbone/ospd-openvas/archive/refs/tags/v$OSPD_OPENVAS_VERSION.tar.gz -o $SOURCE_DIR/ospd-openvas-$OSPD_OPENVAS_VERSION.tar.gz
 tar -C $SOURCE_DIR -xvzf $SOURCE_DIR/ospd-openvas-$OSPD_OPENVAS_VERSION.tar.gz
 cd $SOURCE_DIR/ospd-openvas-$OSPD_OPENVAS_VERSION
+python3 -m venv $SOURCE_DIR/ospd-openvas-$OSPD_OPENVAS_VERSION
+source bin/activate
+python3 -m pip install --upgrade pip
+python3 -m pip install setuptools
+python3 -m pip install packaging
+python3 -m pip install wrapt
+python3 -m pip install cffi
+python3 -m pip install psutil
+python3 -m pip install lxml
+python3 -m pip install defusedxml
+python3 -m pip install paramiko
+python3 -m pip install redis
+python3 -m pip install gnupg
+python3 -m pip install paho-mqtt
 mkdir -p $INSTALL_DIR/ospd-openvas
-python3 -m pip install --root=$INSTALL_DIR/ospd-openvas --no-warn-script-location .
+python3 -m pip install --root="$INSTALL_DIR/ospd-openvas" --prefix="/usr/local" --no-warn-script-location ./
 cp -rv $INSTALL_DIR/ospd-openvas/* /
+deactivate
+sed -i '1 s|^#!.*|#!\/usr\/bin\/python3|' /usr/local/bin/ospd-openvas
+sed -i '/^import sys$/a sys.path.insert(0, "/usr/local/lib/python'"$PYTHON_VERSION"'/site-packages")\nsys.path.insert(0, "'$SOURCE_DIR'/ospd-openvas-22.9.0/lib/python3.13/site-packages/")' /usr/local/bin/ospd-openvas
 
 
 
@@ -233,30 +262,56 @@ cp -rv $INSTALL_DIR/ospd-openvas/* /
 curl -f -L https://github.com/greenbone/notus-scanner/archive/refs/tags/v$NOTUS_VERSION.tar.gz -o $SOURCE_DIR/notus-scanner-$NOTUS_VERSION.tar.gz
 tar -C $SOURCE_DIR -xvzf $SOURCE_DIR/notus-scanner-$NOTUS_VERSION.tar.gz
 cd $SOURCE_DIR/notus-scanner-$NOTUS_VERSION
-mkdir -p $INSTALL_DIR/notus-scanner
 python3 -m venv $SOURCE_DIR/notus-scanner-$NOTUS_VERSION
-source $SOURCE_DIR/notus-scanner-$NOTUS_VERSION/bin/activate
-python3 -m pip install --root=$INSTALL_DIR/notus-scanner --no-warn-script-location .
-cp -rv $INSTALL_DIR/notus-scanner/root/source/notus-scanner-$NOTUS_VERSION/bin/* /usr/local/bin
+source bin/activate
+python3 -m pip install --upgrade pip
+python3 -m pip install setuptools
+python3 -m pip install gnupg
+python3 -m pip install psutil
+python3 -m pip install paho-mqtt
+python3 -m pip install packaging
+mkdir -p $INSTALL_DIR/notus-scanner
+python3 -m pip install --root="$INSTALL_DIR/notus-scanner" --prefix="/usr/local" --no-warn-script-location ./
+cp -rv $INSTALL_DIR/notus-scanner/* /
 deactivate
+sed -i '1 s|^#!.*|#!\/usr\/bin\/python3|' /usr/local/bin/notus-scanner
+sed -i '/^import sys$/a sys.path.insert(0, "/usr/local/lib/python'"$PYTHON_VERSION"'/site-packages")' /usr/local/bin/notus-scanner
 
 
 
 
 
 # greenbone-feed-sync
+curl -f -L https://github.com/greenbone/greenbone-feed-sync/archive/refs/tags/v$FEED_SYNC_VERSION.tar.gz -o $SOURCE_DIR/greenbone-feed-sync-$FEED_SYNC_VERSION.tar.gz
+tar -C $SOURCE_DIR -xvzf $SOURCE_DIR/greenbone-feed-sync-$FEED_SYNC_VERSION.tar.gz
+cd $SOURCE_DIR/greenbone-feed-sync-$FEED_SYNC_VERSION
+python3 -m venv $SOURCE_DIR/greenbone-feed-sync-$FEED_SYNC_VERSION
+source bin/activate
+python3 -m pip install --upgrade pip
+python3 -m pip install setuptools
 mkdir -p $INSTALL_DIR/greenbone-feed-sync
-python3 -m pip install --root=$INSTALL_DIR/greenbone-feed-sync --no-warn-script-location greenbone-feed-sync
+python3 -m pip install --root="$INSTALL_DIR/greenbone-feed-sync" --prefix="/usr/local" --no-warn-script-location ./
 cp -rv $INSTALL_DIR/greenbone-feed-sync/* /
+deactivate
+sed -i '1 s|^#!.*|#!\/usr\/bin\/python3|' /usr/local/bin/greenbone-feed-sync
+sed -i '/^import sys$/a sys.path.insert(0, "/usr/local/lib/python'"$PYTHON_VERSION"'/site-packages")' /usr/local/bin/greenbone-feed-sync
 
 
 
 
 
 # gvm-tools
+curl -f -L https://github.com/greenbone/gvm-tools/archive/refs/tags/v$GVM_TOOLS_VERSION.tar.gz -o $SOURCE_DIR/gvm-tools-$GVM_TOOLS_VERSION.tar.gz
+tar -C $SOURCE_DIR -xvzf $SOURCE_DIR/gvm-tools-$GVM_TOOLS_VERSION.tar.gz
+cd $SOURCE_DIR/gvm-tools-$GVM_TOOLS_VERSION
+python3 -m venv $SOURCE_DIR/gvm-tools-$GVM_TOOLS_VERSION
+source bin/activate
+python3 -m pip install --upgrade pip
+python3 -m pip install setuptools
 mkdir -p $INSTALL_DIR/gvm-tools
-python3 -m pip install --root=$INSTALL_DIR/gvm-tools --no-warn-script-location gvm-tools
+python3 -m pip install --root=$INSTALL_DIR/gvm-tools --prefix="/usr/local" --no-warn-script-location ./
 cp -rv $INSTALL_DIR/gvm-tools/* /
+deactivate
 
 
 
@@ -419,4 +474,3 @@ systemctl start notus-scanner
 systemctl start ospd-openvas
 systemctl start gvmd
 systemctl start gsad
-
