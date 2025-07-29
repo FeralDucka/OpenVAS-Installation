@@ -235,8 +235,7 @@ tar -C $SOURCE_DIR -xvzf $SOURCE_DIR/notus-scanner-$NOTUS_VERSION.tar.gz
 cd $SOURCE_DIR/notus-scanner-$NOTUS_VERSION
 mkdir -p $INSTALL_DIR/notus-scanner
 python3 -m venv $SOURCE_DIR/notus-scanner-$NOTUS_VERSION
-chmod +x $SOURCE_DIR/notus-scanner-$NOTUS_VERSION/bin/activate
-bash $SOURCE_DIR/notus-scanner-$NOTUS_VERSION/bin/activate
+source $SOURCE_DIR/notus-scanner-$NOTUS_VERSION/bin/activate
 python3 -m pip install --root=$INSTALL_DIR/notus-scanner --no-warn-script-location .
 cp -rv $INSTALL_DIR/notus-scanner/root/source/notus-scanner-$NOTUS_VERSION/bin/* /usr/local/bin
 deactivate
