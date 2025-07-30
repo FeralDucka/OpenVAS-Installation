@@ -275,7 +275,7 @@ python3 -m pip install --root="$INSTALL_DIR/notus-scanner" --prefix="/usr/local"
 cp -rv $INSTALL_DIR/notus-scanner/* /
 deactivate
 sed -i '1 s|^#!.*|#!\/usr\/bin\/python3|' /usr/local/bin/notus-scanner
-sed -i '/^import sys$/a sys.path.insert(0, "/usr/local/lib/python'"$PYTHON_VERSION"'/site-packages")' /usr/local/bin/notus-scanner
+sed -i '/^import sys$/a sys.path.insert(0, "/usr/local/lib/python'"$PYTHON_VERSION"'/site-packages")\nsys.path.insert(0, "'$SOURCE_DIR'/notus-scanner-'"$NOTUS_VERSION"'/lib/python'"$PYTHON_VERSION"'/site-packages/")' /usr/local/bin/notus-scanner
 
 
 
